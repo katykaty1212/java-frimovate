@@ -1,10 +1,13 @@
 package ru.yandex.practicum.filmorate.model;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.annotation.DurationPositive;
+import ru.yandex.practicum.filmorate.annotation.ReleaseDate;
 
+import java.time.Duration;
 import java.time.LocalDate;
 
 @Data
@@ -17,8 +20,11 @@ public class Film {
     @Size(max = 200, message = "Максимальная длина описания — 200 символов;")
     private String description;
 
+    @NotNull
+    @ReleaseDate
     private LocalDate releaseDate;
 
-    @Positive(message = "Продолжительность фильма должна быть положительным числом.")
-    private int duration;
+    @NotNull
+    @DurationPositive
+    private Duration duration;
 }

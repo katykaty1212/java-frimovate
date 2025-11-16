@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +25,6 @@ public class FilmController {
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         log.info("Попытка создания фильма {}", film.getName());
-        validateFilmDates(film);
 
         film.setId(getNextId());
         log.info("Фильму {} присвоен ID: {}", film.getName(), film.getId());
@@ -42,8 +40,6 @@ public class FilmController {
             log.error("Попытка обновления фильма без указания ID");
             throw new ValidationException("ID должен быть указан.");
         }
-
-        validateFilmDates(newFilm);
 
         Film existingFilm = films.get(newFilm.getId());
 
@@ -63,19 +59,6 @@ public class FilmController {
         return existingFilm;
     }
 
-    private void validateFilmDates(Film film) {
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            log.warn("Попытка создания фильма с некорректной датой релиза: {}", film.getReleaseDate());
-            throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
-        }
-
-        if (film.getReleaseDate().isAfter(LocalDate.now())) {
-            log.warn("Попытка создания фильма с некорректной датой релиза: {}", film.getReleaseDate());
-            throw new ValidationException("Дата релиза — не позже сегодня.");
-        }
-
-        log.info("Дата релиза {} прошла валидацию.", film.getReleaseDate());
-    }
 
     private long getNextId() {
         long currentMaxId = films.keySet()

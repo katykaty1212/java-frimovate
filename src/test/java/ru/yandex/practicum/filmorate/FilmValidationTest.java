@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -27,7 +28,7 @@ public class FilmValidationTest {
         film.setName("Valid Film");
         film.setDescription("Valid description");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(120);
+        film.setDuration(Duration.ofMinutes(120));
     }
 
     @Test
@@ -61,18 +62,43 @@ public class FilmValidationTest {
     }
 
     @Test
-    public void durationPositiveTest() {
-        film.setDuration(-10);
+    public void releaseDateValidationTest() {
+
+        film.setReleaseDate(LocalDate.of(1895, 12, 27));
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
 
+        assertFalse(violations.isEmpty(), "Должны быть ошибки валидации для даты 1895-12-27");
 
-        assertFalse(violations.isEmpty(), "Должны быть ошибки валидации");
+        boolean hasReleaseDateError = violations.stream()
+                .anyMatch(v -> v.getMessage().contains("Дата релиза должна быть после 28 декабря 1895 года"));
 
-        boolean hasPositiveError = violations.stream()
-                .anyMatch(v -> v.getMessage()
-                        .contains("Продолжительность фильма должна быть положительным числом"));
+        assertTrue(hasReleaseDateError, "Должна быть ошибка валидации даты релиза");
 
-        assertTrue(hasPositiveError, "Должна быть ошибка положительного числа");
+
+        film.setReleaseDate(LocalDate.of(2001, 1, 1));
+
+        violations = validator.validate(film);
+
+        assertTrue(violations.isEmpty(), "Не должно быть ошибок валидации для даты 2001-01-01");
+    }
+
+    @Test
+    public void durationPositiveTest() {
+
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+
+        assertTrue(violations.isEmpty(), "Не должно быть ошибок валидации для положительной продолжительности");
+
+        film.setDuration(Duration.ofMinutes(-10));
+
+        violations = validator.validate(film);
+
+        assertFalse(violations.isEmpty(), "Должны быть ошибки валидации для отрицательной продолжительности");
+
+        boolean hasDurationError = violations.stream()
+                .anyMatch(v -> v.getMessage().contains("Продолжительность фильма должна быть положительной"));
+
+        assertTrue(hasDurationError, "Должна быть ошибка валидации продолжительности");
     }
 }

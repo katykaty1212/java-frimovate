@@ -2,6 +2,8 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -10,7 +12,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class UserControllerTest {
 
-    public UserController userController = new UserController();
+    public InMemoryUserStorage userStorage = new InMemoryUserStorage();
+    public UserService userService = new UserService(userStorage);
+    public UserController userController = new UserController(userStorage, userService);
 
     @Test
     public void createAndFindAllUsersTest() {

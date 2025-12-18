@@ -9,6 +9,8 @@ import ru.yandex.practicum.filmorate.annotation.ReleaseDate;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class Film {
@@ -27,4 +29,6 @@ public class Film {
     @NotNull
     @DurationPositive
     private Duration duration;
+
+    private Set<Long> likeUserId = new HashSet<>();
 }

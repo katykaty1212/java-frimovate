@@ -2,6 +2,9 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -12,7 +15,10 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FilmControllerTest {
 
     public Film film;
-    public FilmController filmController = new FilmController();
+    public InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
+    public InMemoryUserStorage userStorage = new InMemoryUserStorage();
+    public FilmService filmService = new FilmService(filmStorage, userStorage);
+    public FilmController filmController = new FilmController(filmStorage, filmService);
 
     @Test
     public void createAndFindAllFilmsTest() {

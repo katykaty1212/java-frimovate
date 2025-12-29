@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -41,7 +40,7 @@ public class FilmService {
 
     public Film getFilmById(Long filmId) {
         return filmStorage.getFilmById(filmId)
-                .orElseThrow(() ->{
+                .orElseThrow(() -> {
                     log.error("Фильм с ID {} не найден", filmId);
                     return new NotFoundException("Фильм с ID " + filmId + " не найден");
                 });

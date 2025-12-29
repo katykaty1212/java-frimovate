@@ -54,8 +54,8 @@ public class InMemoryFilmStorage implements FilmStorage {
 
         log.info("Фильм с ID {} найден в списке фильмов.", existingFilm.getId());
 
-        if (existingFilm.getName() == null  || existingFilm.getDescription() == null
-                ||existingFilm.getDuration() == null || existingFilm.getReleaseDate() == null) {
+        if (existingFilm.getName() == null || existingFilm.getDescription() == null
+                || existingFilm.getDuration() == null || existingFilm.getReleaseDate() == null) {
             log.error("Фильм с ID {} не прошел валидацию при обновлении.", newFilm.getId());
             throw new ValidationException("Новый фильм не прошел валидацию.");
         }

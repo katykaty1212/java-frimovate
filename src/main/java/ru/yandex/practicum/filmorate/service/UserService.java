@@ -7,10 +7,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,20 +20,35 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
+    public Collection<User> findAll() {
+        return userStorage.findAll();
+    }
+
+    public User create(User user) {
+        return userStorage.create(user);
+    }
+
+    public User update(User newUser) {
+        return userStorage.update(newUser);
+    }
+
+    public User delete(Long userId) {
+        return userStorage.delete(userId);
+    }
+
+    public User getUserById(Long userId) {
+        return userStorage.getUserById(userId)
+                .orElseThrow(() -> {
+                    log.error("Пользователь с ID {} не найден", userId);
+                    return new NotFoundException("Пользователь с ID " + userId + " не найден");
+                });
+    }
+
     public void addFriend(Long id, Long friendId) {
-        User user = userStorage.getUserById(id);
-        User friend = userStorage.getUserById(friendId);
+        User user = getUserById(id);
+        User friend = getUserById(friendId);
         log.info("Попытка пользователей {} и {} подружиться", user, friend);
 
-        if (user == null) {
-            log.error("Не найден пользователь {}", user);
-            throw new NotFoundException("Не найден пользователь.");
-        }
-
-        if (friend == null) {
-            log.error("Не найден пользователь {}", friend);
-            throw new NotFoundException("Не найден другой пользователь.");
-        }
         if (user.getFriendsUserId().contains(friendId)) {
             log.warn("Пользователь {} уже в друзьях у {}", friendId, id);
             throw new ValidationException("Пользователи уже друзья");
@@ -54,19 +66,9 @@ public class UserService {
     }
 
     public void deleteFriend(Long id, Long friendId) {
-        User user = userStorage.getUserById(id);
-        User friend = userStorage.getUserById(friendId);
+        User user = getUserById(id);
+        User friend = getUserById(friendId);
         log.info("Попытка пользователей {} удалить из друзей {}", user, friend);
-
-        if (user == null) {
-            log.error("Не найден пользователь {}", user);
-            throw new NotFoundException("Не найден пользователь.");
-        }
-
-        if (friend == null) {
-            log.error("Не найден пользователь {}", friend);
-            throw new NotFoundException("Не найден пользователь.");
-        }
 
         user.getFriendsUserId().remove(friendId);
         log.info("Пользователь {} удалил из друзей пользователя {}", user, friend);
@@ -76,39 +78,24 @@ public class UserService {
 
     public List<User> getListUserFriend(Long id) {
 
-        User user = userStorage.getUserById(id);
-
-        if (user == null) {
-            log.error("Не найден пользователь {}", user);
-            throw new NotFoundException("Не найден пользователь.");
-        }
+        User user = getUserById(id);
 
         log.info("Попытка получить список друзей");
-        return user.getFriendsUserId().stream().map(userStorage::getUserById)
-                .filter(Objects::nonNull)
+        return user.getFriendsUserId().stream()
+                .map(this::getUserById)
                 .collect(Collectors.toList());
     }
 
     public List<User> getCommonFriends(Long id, Long otherId) {
-        User user = userStorage.getUserById(id);
-        User otherUser = userStorage.getUserById(otherId);
+        User user = getUserById(id);
+        User otherUser = getUserById(otherId);
         log.info("Попытка получить список общих друзей пользователей {} и {}", user, otherUser);
-
-        if (user == null) {
-            log.error("Не найден пользователь {}", user);
-            throw new NotFoundException("Не найден пользователь.");
-        }
-
-        if (otherUser == null) {
-            log.error("Не найден пользователь {}", otherUser);
-            throw new NotFoundException("Не найден другой пользователь.");
-        }
 
         Set<Long> common = new HashSet<>(user.getFriendsUserId());
         common.retainAll(otherUser.getFriendsUserId());
 
         return common.stream()
-                .map(userStorage::getUserById)
+                .map(this::getUserById)
                 .toList();
     }
 }

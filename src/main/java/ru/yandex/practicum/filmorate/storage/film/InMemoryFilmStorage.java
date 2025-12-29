@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -53,6 +54,12 @@ public class InMemoryFilmStorage implements FilmStorage {
 
         log.info("Фильм с ID {} найден в списке фильмов.", existingFilm.getId());
 
+        if (existingFilm.getName() == null  || existingFilm.getDescription() == null
+                ||existingFilm.getDuration() == null || existingFilm.getReleaseDate() == null) {
+            log.error("Фильм с ID {} не прошел валидацию при обновлении.", newFilm.getId());
+            throw new ValidationException("Новый фильм не прошел валидацию.");
+        }
+
         existingFilm.setName(newFilm.getName());
         existingFilm.setDescription(newFilm.getDescription());
         existingFilm.setDuration(newFilm.getDuration());
@@ -78,8 +85,8 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film getFilmById(Long filmId) {
-        return films.get(filmId);
+    public Optional<Film> getFilmById(Long filmId) {
+        return Optional.ofNullable(films.get(filmId));
     }
 
     private long getNextId() {

@@ -14,7 +14,7 @@ public class UserControllerTest {
 
     public InMemoryUserStorage userStorage = new InMemoryUserStorage();
     public UserService userService = new UserService(userStorage);
-    public UserController userController = new UserController(userStorage, userService);
+    public UserController userController = new UserController(userService);
 
     @Test
     public void createAndFindAllUsersTest() {

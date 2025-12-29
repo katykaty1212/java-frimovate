@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -16,31 +17,39 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class FilmService {
 
     private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
+    private final UserService userService;
 
+    public Film create(Film film) {
+        return filmStorage.create(film);
+    }
 
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
+    public Film update(Film newFilm) {
+        return filmStorage.update(newFilm);
+    }
+
+    public Film delete(Long id) {
+        return filmStorage.delete(id);
+    }
+
+    public Collection<Film> findAll() {
+        return filmStorage.findAll();
+    }
+
+    public Film getFilmById(Long filmId) {
+        return filmStorage.getFilmById(filmId)
+                .orElseThrow(() ->{
+                    log.error("Фильм с ID {} не найден", filmId);
+                    return new NotFoundException("Фильм с ID " + filmId + " не найден");
+                });
     }
 
     public void addLike(Long id, Long userId) {
         log.info("Пользователь {} пытается поставить лайк фильму {}", userId, id);
-        Film film = filmStorage.getFilmById(id);
-        User user = userStorage.getUserById(userId);
-
-        if (film == null) {
-            log.error("Фильм с ID {} не найден при попытке поставить лайк", id);
-            throw new NotFoundException("Такого фильма не существует.");
-        }
-
-        if (user == null) {
-            log.error("Пользователь с ID {} не найден при попытке поставить лайк фильму {}", userId, id);
-            throw new NotFoundException("Такого пользователя не существует.");
-        }
+        Film film = getFilmById(id);
 
         film.getLikeUserId().add(userId);
         log.info("Пользователь {} поставил лайк фильму {}",
@@ -48,19 +57,9 @@ public class FilmService {
     }
 
     public void deleteLike(Long filmId, Long userId) {
-        Film film = filmStorage.getFilmById(filmId);
-        User user = userStorage.getUserById(userId);
+        Film film = getFilmById(filmId);
+        User user = userService.getUserById(userId);
         log.info("Попытка пользователей {} удалить лайк у фильма {}", user, film);
-
-        if (film == null) {
-            log.error("Фильм с ID {} не найден при попытке удалить лайк", filmId);
-            throw new NotFoundException("Такого фильма не существует.");
-        }
-
-        if (user == null) {
-            log.error("Пользователь с ID {} не найден при попытке удалить лайк", userId);
-            throw new NotFoundException("Такого пользователя не существует.");
-        }
 
         film.getLikeUserId().remove(userId);
         log.info("Пользователь {} удалил лайк с фильма {}", userId, filmId);

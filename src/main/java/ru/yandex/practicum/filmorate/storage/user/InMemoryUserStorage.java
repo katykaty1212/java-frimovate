@@ -1,17 +1,16 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Component
+@Qualifier("inMemoryUserStorage")
 @Slf4j
 public class InMemoryUserStorage implements UserStorage {
 
@@ -84,6 +83,31 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public Optional<User> getUserById(Long userId) {
         return Optional.ofNullable(users.get(userId));
+    }
+
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+
+    }
+
+    @Override
+    public void acceptFriend(Long userId, Long friendId) {
+
+    }
+
+    @Override
+    public void deleteFriend(Long userId, Long friendId) {
+
+    }
+
+    @Override
+    public List<User> getUserFriends(Long userId) {
+        return List.of();
+    }
+
+    @Override
+    public List<User> getCommonFriends(Long userId, Long otherId) {
+        return List.of();
     }
 
     private void validateName(User user) {

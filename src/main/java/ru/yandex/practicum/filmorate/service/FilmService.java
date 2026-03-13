@@ -1,12 +1,11 @@
 package ru.yandex.practicum.filmorate.service;
 
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.Collection;
@@ -16,11 +15,15 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserService userService;
+
+    public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage, UserService userService) {
+        this.filmStorage = filmStorage;
+        this.userService = userService;
+    }
 
     public Film create(Film film) {
         return filmStorage.create(film);
@@ -46,22 +49,19 @@ public class FilmService {
                 });
     }
 
-    public void addLike(Long id, Long userId) {
-        log.info("Пользователь {} пытается поставить лайк фильму {}", userId, id);
-        Film film = getFilmById(id);
-
-        film.getLikeUserId().add(userId);
-        log.info("Пользователь {} поставил лайк фильму {}",
-                userId, id);
+    public void addLike(Long filmId, Long userId) {
+        getFilmById(filmId);
+        userService.getUserById(userId);
+        filmStorage.addLike(filmId, userId);
+        log.info("Пользователь {} поставил лайк фильму {}", userId, filmId);
     }
 
     public void deleteLike(Long filmId, Long userId) {
-        Film film = getFilmById(filmId);
-        User user = userService.getUserById(userId);
-        log.info("Попытка пользователей {} удалить лайк у фильма {}", user, film);
+        getFilmById(filmId);
+        userService.getUserById(userId);
+        filmStorage.deleteLike(filmId, userId);
 
-        film.getLikeUserId().remove(userId);
-        log.info("Пользователь {} удалил лайк с фильма {}", userId, filmId);
+        log.info("Пользователь {} удалил лайк фильму {}", userId, filmId);
     }
 
     public List<Film> getPopularFilm(Long count) {

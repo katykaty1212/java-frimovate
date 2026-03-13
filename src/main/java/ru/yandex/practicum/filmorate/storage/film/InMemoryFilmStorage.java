@@ -1,17 +1,16 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Component
+@Qualifier("inMemoryFilmStorage")
 @Slf4j
 public class InMemoryFilmStorage implements FilmStorage {
 
@@ -87,6 +86,21 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Optional<Film> getFilmById(Long filmId) {
         return Optional.ofNullable(films.get(filmId));
+    }
+
+    @Override
+    public void addLike(Long filmId, Long userId) {
+
+    }
+
+    @Override
+    public void deleteLike(Long filmId, Long userId) {
+
+    }
+
+    @Override
+    public Set<Long> getLikes(Long filmId) {
+        return Set.of();
     }
 
     private long getNextId() {

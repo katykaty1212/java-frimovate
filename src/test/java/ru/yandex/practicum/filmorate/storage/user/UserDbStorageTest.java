@@ -73,7 +73,6 @@ class UserDbStorageTest {
         assertThat(found1.getFriendships()).hasSize(1);
         assertThat(found1.getFriendships().iterator().next().getFriendId()).isEqualTo(user2.getId());
 
-        userStorage.acceptFriend(user1.getId(), user2.getId());
-        // проверить статус CONFIRMED (если нужно)
+        userStorage.acceptFriend(user2.getId(), user1.getId());
     }
 }

@@ -67,19 +67,14 @@ class FilmDbStorageTest {
 
     @Test
     void shouldUpdateFilm() {
-        // 1. Создаем фильм
         Film film = makeTestFilm();
         Film created = filmStorage.create(film);
 
-        // 2. ПОЛУЧАЕМ свежую версию фильма из базы и изменяем ее
-        //    Важно! Нельзя менять объект 'created', т.к. в нем могут быть не все данные.
         Film filmToUpdate = filmStorage.getFilmById(created.getId()).get();
         filmToUpdate.setName("Обновлённое название");
 
-        // 3. Выполняем обновление
         Film updated = filmStorage.update(filmToUpdate);
 
-        // 4. Проверяем, что имя обновилось
         assertThat(updated.getName()).isEqualTo("Обновлённое название");
     }
 

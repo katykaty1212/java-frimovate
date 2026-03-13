@@ -22,8 +22,8 @@ class UserDbStorageTest {
 
     private User makeTestUser() {
         User user = new User();
-        user.setEmail("test@mail.ru");
-        user.setLogin("testlogin");
+        user.setEmail("test" + System.currentTimeMillis() + "@mail.ru"); // уникальный email
+        user.setLogin("testlogin" + System.currentTimeMillis());
         user.setName("Test User");
         user.setBirthday(LocalDate.of(1990, 1, 1));
         return user;

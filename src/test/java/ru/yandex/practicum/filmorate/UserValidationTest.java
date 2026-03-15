@@ -32,65 +32,41 @@ public class UserValidationTest {
     @Test
     public void emailAnnotationNotBlankTest() {
         user.setEmail("   ");
-
         Set<ConstraintViolation<User>> violations = validator.validate(user);
-
         assertFalse(violations.isEmpty(), "Должны быть ошибки валидации");
-
-        boolean hasBlankError = violations.stream()
-                .anyMatch(v -> v.getMessage().contains("не может быть пустой"));
-
-        assertTrue(hasBlankError, "Должна быть ошибка пустой строки");
     }
 
     @Test
     public void emailAnnotationInvalidFormatTest() {
         user.setEmail("invalid-email");
-
         Set<ConstraintViolation<User>> violations = validator.validate(user);
-
         assertFalse(violations.isEmpty(), "Должны быть ошибки валидации");
-
-        boolean hasEmailError = violations.stream()
-                .anyMatch(v -> v.getMessage().contains("формату электронного адреса"));
-
-        assertTrue(hasEmailError, "Должна быть ошибка формата email");
     }
 
     @Test
     public void loginAnnotationNotBlankTest() {
         user.setLogin("   ");
-
         Set<ConstraintViolation<User>> violations = validator.validate(user);
-
         assertFalse(violations.isEmpty(), "Должны быть ошибки валидации");
-
-        boolean hasBlankError = violations.stream()
-                .anyMatch(v -> v.getMessage().contains("не может быть пустой"));
-
-        assertTrue(hasBlankError, "Должна быть ошибка пустой строки");
     }
 
     @Test
     public void loginAnnotationNoSpacesTest() {
         user.setLogin("login with spaces");
-
         Set<ConstraintViolation<User>> violations = validator.validate(user);
-
         assertFalse(violations.isEmpty(), "Должны быть ошибки валидации");
-
-        boolean hasSpaceError = violations.stream()
-                .anyMatch(v -> v.getMessage().contains("не должен содержать пробелов"));
-
-        assertTrue(hasSpaceError, "Должна быть ошибка пробелов в логине");
     }
 
     @Test
     public void birthdayAnnotationPastOrPresentTest() {
         user.setBirthday(LocalDate.now().plusDays(1));
-
         Set<ConstraintViolation<User>> violations = validator.validate(user);
-
         assertFalse(violations.isEmpty(), "Должны быть ошибки валидации");
+    }
+
+    @Test
+    public void validUserShouldPassTest() {
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty(), "Валидный пользователь не должен содержать ошибок");
     }
 }

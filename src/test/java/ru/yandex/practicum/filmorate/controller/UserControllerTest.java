@@ -1,7 +1,17 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserRowMapper;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -10,42 +20,74 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class UserControllerTest {
 
-    public UserController userController = new UserController();
+    private UserController userController;
+    private JdbcTemplate jdbcTemplate;
+    private EmbeddedDatabase embeddedDatabase;
+
+    @BeforeEach
+    void setUp() {
+        embeddedDatabase = new EmbeddedDatabaseBuilder()
+                .setType(EmbeddedDatabaseType.H2)
+                .addScript("classpath:schema.sql")
+                .addScript("classpath:data.sql")
+                .build();
+
+        jdbcTemplate = new JdbcTemplate(embeddedDatabase);
+
+        // Очищаем таблицы перед каждым тестом
+        jdbcTemplate.execute("DELETE FROM friendship");
+        jdbcTemplate.execute("DELETE FROM likes");
+        jdbcTemplate.execute("DELETE FROM film_genre");
+        jdbcTemplate.execute("DELETE FROM films");
+        jdbcTemplate.execute("DELETE FROM users");
+
+        // Сбрасываем счетчик ID
+        jdbcTemplate.execute("ALTER TABLE users ALTER COLUMN user_id RESTART WITH 1");
+
+        UserRowMapper userRowMapper = new UserRowMapper();
+        FriendshipRowMapper friendshipRowMapper = new FriendshipRowMapper();
+
+        UserDbStorage userStorage = new UserDbStorage(jdbcTemplate, userRowMapper, friendshipRowMapper);
+        UserService userService = new UserService(userStorage);
+        userController = new UserController(userService);
+    }
+
+    @AfterEach
+    void tearDown() {
+        embeddedDatabase.shutdown();
+    }
+
+    private User createTestUser(String email, String login, String name) {
+        User user = new User();
+        user.setEmail(email);
+        user.setLogin(login);
+        user.setName(name);
+        user.setBirthday(LocalDate.of(2000, 1, 1));
+        return user;
+    }
 
     @Test
     public void createAndFindAllUsersTest() {
-        User user1 = new User();
-        user1.setEmail("user1@mail.ru");
-        user1.setLogin("user1login");
-        user1.setName("User One");
-        user1.setBirthday(LocalDate.of(2000, 1, 1));
-
-        User user2 = new User();
-        user2.setEmail("user2@mail.ru");
-        user2.setLogin("user2login");
-        user2.setName("User Two");
-        user2.setBirthday(LocalDate.of(1995, 5, 15));
+        User user1 = createTestUser("user1@mail.ru", "user1login", "User One");
+        User user2 = createTestUser("user2@mail.ru", "user2login", "User Two");
 
         userController.create(user1);
         userController.create(user2);
 
-        // Получаем всех пользователей
         Collection<User> allUsers = userController.findAll();
 
-        assertEquals(2, allUsers.size(), "Должны вернуться 2 пользователя");
+        assertEquals(2, allUsers.size());
+        assertTrue(allUsers.stream().anyMatch(u -> u.getEmail().equals("user1@mail.ru")));
+        assertTrue(allUsers.stream().anyMatch(u -> u.getEmail().equals("user2@mail.ru")));
     }
 
     @Test
     public void createUserTest() {
-        User user = new User();
-        user.setEmail("test@mail.ru");
-        user.setLogin("validlogin");
-        user.setName("Valid Name");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
+        User user = createTestUser("test@mail.ru", "validlogin", "Valid Name");
 
         User createdUser = userController.create(user);
 
-        assertNotNull(createdUser.getId(), "Пользователь должен получить ID");
+        assertNotNull(createdUser.getId());
         assertEquals("test@mail.ru", createdUser.getEmail());
         assertEquals("validlogin", createdUser.getLogin());
         assertEquals("Valid Name", createdUser.getName());
@@ -53,40 +95,25 @@ public class UserControllerTest {
 
     @Test
     public void createUserWithEmptyNameTest() {
-        User user = new User();
-        user.setEmail("test@mail.ru");
-        user.setLogin("validlogin");
-        user.setName("");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
+        User user = createTestUser("empty@mail.ru", "validlogin", "");
 
         User createdUser = userController.create(user);
 
-        assertEquals("validlogin", createdUser.getName(),
-                "Имя должно замениться на логин при пустом имени");
+        assertEquals("validlogin", createdUser.getName());
     }
 
     @Test
     public void createUserWithNullNameTest() {
-        User user = new User();
-        user.setEmail("test@mail.ru");
-        user.setLogin("validlogin");
-        user.setName(null); // null имя
-        user.setBirthday(LocalDate.of(2000, 1, 1));
+        User user = createTestUser("null@mail.ru", "validlogin", null);
 
         User createdUser = userController.create(user);
 
-        assertEquals("validlogin", createdUser.getName(),
-                "Имя должно замениться на логин при null имени");
+        assertEquals("validlogin", createdUser.getName());
     }
 
     @Test
     public void updateUserWithValidDataTest() {
-        User user = new User();
-        user.setEmail("original@mail.ru");
-        user.setLogin("originallogin");
-        user.setName("Original Name");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
-
+        User user = createTestUser("original@mail.ru", "originallogin", "Original Name");
         User createdUser = userController.create(user);
         Long userId = createdUser.getId();
 
@@ -99,22 +126,16 @@ public class UserControllerTest {
 
         User resultUser = userController.update(updatedUser);
 
-        assertEquals(userId, resultUser.getId(), "ID должен остаться прежним");
-        assertEquals("updated@mail.ru", resultUser.getEmail(), "Email должен обновиться");
-        assertEquals("updatedlogin", resultUser.getLogin(), "Логин должен обновиться");
-        assertEquals("Updated Name", resultUser.getName(), "Имя должно обновиться");
-        assertEquals(LocalDate.of(1995, 5, 15),
-                resultUser.getBirthday(), "Дата рождения должна обновиться");
+        assertEquals(userId, resultUser.getId());
+        assertEquals("updated@mail.ru", resultUser.getEmail());
+        assertEquals("updatedlogin", resultUser.getLogin());
+        assertEquals("Updated Name", resultUser.getName());
+        assertEquals(LocalDate.of(1995, 5, 15), resultUser.getBirthday());
     }
 
     @Test
     public void updateUserWithEmptyNameTest() {
-        User user = new User();
-        user.setEmail("test@mail.ru");
-        user.setLogin("originallogin");
-        user.setName("Original Name");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
-
+        User user = createTestUser("test@mail.ru", "originallogin", "Original Name");
         User createdUser = userController.create(user);
 
         User updatedUser = new User();
@@ -126,7 +147,30 @@ public class UserControllerTest {
 
         User resultUser = userController.update(updatedUser);
 
-        assertEquals("updatedlogin", resultUser.getName(),
-                "Имя должно замениться на логин при пустом имени");
+        assertEquals("updatedlogin", resultUser.getName());
+    }
+
+    @Test
+    public void getUserByIdTest() {
+        User user = createTestUser("find@mail.ru", "findlogin", "Find User");
+        User createdUser = userController.create(user);
+
+        User foundUser = userController.getUserById(createdUser.getId());
+
+        assertNotNull(foundUser);
+        assertEquals(createdUser.getId(), foundUser.getId());
+        assertEquals("find@mail.ru", foundUser.getEmail());
+    }
+
+    @Test
+    public void deleteUserTest() {
+        User user = createTestUser("delete@mail.ru", "deletelogin", "Delete User");
+        User createdUser = userController.create(user);
+
+        userController.delete(createdUser.getId());
+
+        assertThrows(RuntimeException.class, () -> {
+            userController.getUserById(createdUser.getId());
+        });
     }
 }
